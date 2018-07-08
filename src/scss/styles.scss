@@ -1,0 +1,21 @@
+// functions and mixins
+
+// rem calc
+@function rem-calc($size) {
+  $rem-size: $size / 16px;
+  @return #{$rem-size}rem;
+}
+
+// position @mixin with conditional arguments
+@mixin position($type:null, $top:null, $right:null, $bottom:null, $left:null, $zindex:null) {
+  @if $type { position: $type; }
+  @if $top { top: $top; }
+  @if $right { right: $right; }
+  @if $bottom { bottom: $bottom; }
+  @if $left { left: $left; }
+  @if $zindex { z-index: $zindex; }
+}
+
+// imports
+@import 'custom';
+@import '../../node_modules/bootstrap/scss/bootstrap';
