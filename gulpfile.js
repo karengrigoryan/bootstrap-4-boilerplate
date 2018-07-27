@@ -65,7 +65,7 @@ gulp.task('image', function () {
 // "watch" task for watching for changes and compiling scss and js
 gulp.task('watch', ['scss', 'js'], () => {
 	gulp.watch(`${path.scss}/**/*.scss`, ['scss']);
-	gulp.watch(`${path.js}/**.js`, ['js']);
+	gulp.watch(`${path.js_src}/*.js`, ['js']);
 });
 
 // "build" task for compiling scss and js and optimizing images
