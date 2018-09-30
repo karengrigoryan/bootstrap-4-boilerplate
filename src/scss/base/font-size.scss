@@ -1,0 +1,20 @@
+$fontSizesMin: 10 !default;
+$fontSizesMax: 40 !default;
+
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+
+    @for $size from $fontSizesMin through $fontSizesMax {
+      .font-size#{$infix}-#{$size} {
+        font-size: #{$size}px;
+      }
+
+      @if $size < 26 {
+        $size: $size + 1;
+      } @else {
+        $size: $size + 2;
+      }
+    }
+  }
+}

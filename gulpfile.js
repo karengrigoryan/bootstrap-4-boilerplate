@@ -1,72 +1,109 @@
 // dependencies
-const
-	gulp = require('gulp'),
-	sass = require('gulp-sass'),
-	cleanCSS = require('gulp-clean-css'),
-	uglify = require('gulp-uglify'),
-	autoprefixer = require('gulp-autoprefixer'),
-	rename = require('gulp-rename'),
-	plumber = require('gulp-plumber'),
-	notify = require('gulp-notify'),
-	babel = require('gulp-babel'),
-	image = require('gulp-image');
+const gulp = require('gulp');
+const sass = require('gulp-sass');
+const cleanCSS = require('gulp-clean-css');
+const uglify = require('gulp-uglify');
+const autoprefixer = require('gulp-autoprefixer');
+const rename = require('gulp-rename');
+const plumber = require('gulp-plumber');
+const notify = require('gulp-notify');
+const babel = require('gulp-babel');
+const image = require('gulp-image');
+const browserSync = require('browser-sync').create();
+
+/*
+    general settings
+
+    if you're using local server for your development please uncomment and assign
+    server address to proxy prop in settings object (e.g.: 'localhost:8000')
+*/
+
+const settings = {
+    browserSync: true,
+    // proxy: 'localhost:8000'
+};
 
 // main paths
 const path = {
-	// source
-	scss: 'src/scss',
-	js_src: 'src/js',
+    // source files
+    scss: 'src/scss',
+    js_src: 'src/js',
 
-	// assets
-	css: 'assets/css',
-	js: 'assets/js',
-	img: 'assets/img'
+    // production ready assets
+    css: 'assets/css',
+    js: 'assets/js',
+    img: 'assets/img'
 };
+
+// browser sync options
+const browserSyncOptions = {
+    files: [
+        path.css,
+        path.js,
+        path.img,
+        './html'
+    ]
+};
+
+settings.proxy
+    ? browserSyncOptions.proxy = settings.proxy
+    : browserSyncOptions.server = {baseDir: "./"};
 
 // error handler
 let onError = function (err) {
-	notify.onError({
-		title: 'Gulp',
-		subtitle: 'Failure!',
-		message: 'Error: <%= error.message %>',
-		sound: 'Basso'
-	})(err);
-	this.emit('end');
+    notify.onError({
+        title: 'Gulp',
+        subtitle: 'Failure!',
+        message: 'Error: <%= error.message %>',
+        sound: 'Basso'
+    })(err);
+    this.emit('end');
 };
 
 // compiling css
-gulp.task('scss', () => {
-	return gulp.src(`${path.scss}/styles.scss`)
-		.pipe(plumber({errorHandler: onError}))
-		.pipe(sass())
-		.pipe(autoprefixer())
-		.pipe(cleanCSS({compatibility: '*'}))
-		.pipe(rename({suffix: '.min'}))
-		.pipe(gulp.dest(path.css));
-});
+gulp.task('scss', () =>
+    gulp.src(`${path.scss}/styles.scss`)
+        .pipe(plumber({errorHandler: onError}))
+        .pipe(sass())
+        .pipe(autoprefixer())
+        .pipe(cleanCSS({compatibility: '*'}))
+        .pipe(rename({suffix: '.min'}))
+        .pipe(gulp.dest(path.css))
+);
 
 // compiling js
 gulp.task('js', () =>
-	gulp.src(`${path.js_src}/*.js`)
-		.pipe(plumber({errorHandler: onError}))
-		.pipe(babel({presets: ['env']}))
-		.pipe(uglify())
-		.pipe(rename({suffix: '.min'}))
-		.pipe(gulp.dest(path.js))
+    gulp.src(`${path.js_src}/*.js`)
+        .pipe(plumber({errorHandler: onError}))
+        .pipe(babel({presets: ['@babel/env']}))
+        .pipe(uglify())
+        .pipe(rename({suffix: '.min'}))
+        .pipe(gulp.dest(path.js))
 );
 
 // optimizing images
-gulp.task('image', function () {
-	gulp.src(`${path.img}/**/*`)
-		.pipe(image())
-		.pipe(gulp.dest(path.img));
+gulp.task('image', () =>
+    gulp.src(`${path.img}/**/*`)
+        .pipe(image())
+        .pipe(gulp.dest(path.img))
+);
+
+// browser sync
+gulp.task('browser-sync', () =>
+    browserSync.init(browserSyncOptions)
+);
+
+const tasksForWatch = ['scss', 'js'];
+const addBrowserSync = browserSyncEnabled => {
+    if (browserSyncEnabled) tasksForWatch.push('browser-sync');
+};
+addBrowserSync(settings.browserSync);
+
+// watching for changes and compiling scss and js
+gulp.task('dev', tasksForWatch, () => {
+    gulp.watch(`${path.scss}/**/*.scss`, ['scss']);
+    gulp.watch(`${path.js_src}/*.js`, ['js']);
 });
 
-// "watch" task for watching for changes and compiling scss and js
-gulp.task('watch', ['scss', 'js'], () => {
-	gulp.watch(`${path.scss}/**/*.scss`, ['scss']);
-	gulp.watch(`${path.js_src}/*.js`, ['js']);
-});
-
-// "build" task for compiling scss and js and optimizing images
+// compiles scss & js and optimizing images
 gulp.task('build', ['scss', 'js', 'image']);

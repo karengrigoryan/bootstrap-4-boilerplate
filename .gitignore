@@ -1,4 +1,5 @@
 ### macOS template
+### macOS template
 # General
 .DS_Store
 .AppleDouble
@@ -149,4 +150,3 @@ typings/
 
 # next.js build output
 .next
-
