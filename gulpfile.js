@@ -7,9 +7,11 @@ const autoprefixer = require('gulp-autoprefixer');
 const rename = require('gulp-rename');
 const plumber = require('gulp-plumber');
 const notify = require('gulp-notify');
-const babel = require('gulp-babel');
 const image = require('gulp-image');
 const browserSync = require('browser-sync').create();
+const browserify = require('browserify');
+const source = require('vinyl-source-stream');
+const buffer = require('vinyl-buffer');
 
 /*
     general settings
@@ -72,14 +74,16 @@ gulp.task('scss', () =>
 );
 
 // compiling js
-gulp.task('js', () =>
-    gulp.src(`${path.js_src}/*.js`)
-        .pipe(plumber({errorHandler: onError}))
-        .pipe(babel({presets: ['@babel/env']}))
+gulp.task('js', function () {
+    return browserify(`${path.js_src}/app.js`)
+        .transform('babelify', {presets: ['@babel/env']})
+        .bundle()
+        .pipe(source('app.js'))
+        .pipe(buffer())
         .pipe(uglify())
         .pipe(rename({suffix: '.min'}))
         .pipe(gulp.dest(path.js))
-);
+});
 
 // optimizing images
 gulp.task('image', () =>
