@@ -1,4 +1,4 @@
 $(function () {
-    let message = 'Hello from JS!';
+    const message = 'Hello World!';
     console.log(message);
 });

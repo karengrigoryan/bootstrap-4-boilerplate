@@ -1,113 +1,132 @@
-// dependencies
-const gulp = require('gulp');
+/**
+ * Dependencies
+ */
+const { series, parallel, watch, src, dest } = require('gulp');
 const sass = require('gulp-sass');
 const cleanCSS = require('gulp-clean-css');
 const uglify = require('gulp-uglify');
 const autoprefixer = require('gulp-autoprefixer');
 const rename = require('gulp-rename');
-const plumber = require('gulp-plumber');
-const notify = require('gulp-notify');
+const tap = require('gulp-tap');
+const buffer = require('gulp-buffer');
 const image = require('gulp-image');
 const browserSync = require('browser-sync').create();
 const browserify = require('browserify');
-const source = require('vinyl-source-stream');
-const buffer = require('vinyl-buffer');
+const notifier = require('node-notifier');
 
-/*
-    general settings
+/**
+ * Main config where you can define paths and browserSync settings
+ * */
+const config = {};
 
-    if you're using local server for your development please uncomment and assign
-    server address to proxy prop in settings object (e.g.: 'localhost:8000')
-*/
+/** 
+ * Source and distribition files folders 
+ * */
+config.paths = {
+    src: {
+        scss: 'src/scss',
+        js: 'src/js',
+    },
+    dist: {
+        css: 'assets/css',
+        js: 'assets/js',
+        img: 'assets/img'
+    }
+}
 
-const settings = {
-    browserSync: true,
+/** 
+ * BrowserSync settings
+ * 
+ * uncomment "proxy" option and comment out "server" one
+ * if you're using a local server
+ * */
+config.browserSync = {
     // proxy: 'localhost:8000'
-};
-
-// main paths
-const path = {
-    // source files
-    scss: 'src/scss',
-    js_src: 'src/js',
-
-    // production ready assets
-    css: 'assets/css',
-    js: 'assets/js',
-    img: 'assets/img'
-};
-
-// browser sync options
-const browserSyncOptions = {
+    server: { baseDir: "./" },
     files: [
-        path.css,
-        path.js,
-        path.img,
-        './html'
+        config.paths.dist.css,
+        config.paths.dist.js,
+        '**/*.html'
     ]
 };
 
-settings.proxy
-    ? browserSyncOptions.proxy = settings.proxy
-    : browserSyncOptions.server = {baseDir: "./"};
+/**
+ * ------------------------------------------
+ * ------------>>> Gulp tasks <<<------------
+ * ------------------------------------------
+ */
 
-// error handler
-let onError = function (err) {
-    notify.onError({
-        title: 'Gulp',
-        subtitle: 'Failure!',
-        message: 'Error: <%= error.message %>',
+const handleError = (err, title) => {
+    console.log(err);
+
+    notifier.notify({
+        title,
+        message: err.message,
         sound: 'Basso'
-    })(err);
-    this.emit('end');
-};
+    });
+}
 
-// compiling css
-gulp.task('scss', () =>
-    gulp.src(`${path.scss}/styles.scss`)
-        .pipe(plumber({errorHandler: onError}))
-        .pipe(sass())
+const compileSCSS = () => {
+    return src(`${config.paths.src.scss}/styles.scss`)
+        .pipe(sass().on('error', err => handleError(err, 'SCSS Compile Error')))
         .pipe(autoprefixer())
-        .pipe(cleanCSS({compatibility: '*'}))
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest(path.css))
-);
+        .pipe(cleanCSS({ compatibility: '*' }))
+        .pipe(rename({ suffix: '.min' }))
+        .pipe(dest(config.paths.dist.css))
+}
 
-// compiling js
-gulp.task('js', function () {
-    return browserify(`${path.js_src}/app.js`)
-        .transform('babelify', {presets: ['@babel/env']})
-        .bundle()
-        .pipe(source('app.js'))
+const compileJS = () => {
+    return src(`${config.paths.src.js}/*.js`, { read: false })
+        .pipe(tap(file => {
+            file.contents = browserify(file.path, { debug: true })
+                .transform('babelify', { presets: ['@babel/preset-env'] })
+                .bundle();
+        }))
         .pipe(buffer())
-        .pipe(uglify())
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest(path.js))
-});
+        .pipe(uglify().on('error', err => handleError(err, 'JS Compile Error')))
+        .pipe(rename({ suffix: '.min' }))
+        .pipe(dest(config.paths.dist.js));
+}
 
-// optimizing images
-gulp.task('image', () =>
-    gulp.src(`${path.img}/**/*`)
+const optimizeImages = () => {
+    return src(`${config.paths.dist.img}/**/*`)
         .pipe(image())
-        .pipe(gulp.dest(path.img))
-);
+        .pipe(dest(config.paths.dist.img));
+}
 
-// browser sync
-gulp.task('browser-sync', () =>
-    browserSync.init(browserSyncOptions)
-);
+const liveReload = () => {
+    browserSync.init(config.browserSync)
+}
 
-const tasksForWatch = ['scss', 'js'];
-const addBrowserSync = browserSyncEnabled => {
-    if (browserSyncEnabled) tasksForWatch.push('browser-sync');
+/**
+ * Watch files for changes
+ */
+const watchForChanges = () => {
+    watch(`${config.paths.src.js}/**/*.js`, compileJS)
+    watch(`${config.paths.src.scss}/**/*.scss`, compileSCSS)
 };
-addBrowserSync(settings.browserSync);
 
-// watching for changes and compiling scss and js
-gulp.task('dev', tasksForWatch, () => {
-    gulp.watch(`${path.scss}/**/*.scss`, ['scss']);
-    gulp.watch(`${path.js_src}/*.js`, ['js']);
-});
+/**
+ * Compile sources + watch for changes
+ * 2 versions with/without live reload
+ */
+const compileWatch = series(compileSCSS, compileJS, watchForChanges);
+const compileWatchReload = series(compileSCSS, compileJS, parallel(watchForChanges, liveReload));
 
-// compiles scss & js and optimizing images
-gulp.task('build', ['scss', 'js', 'image']);
+/**
+ * Build project for production (compile JS ans SCSS + optimize images)
+ */
+const build = series(compileSCSS, compileJS, optimizeImages);
+
+/**
+ * Gulp tasks you can use in terminal by typing gulp + task name
+ * For example: gulp optimizeImages
+ */
+exports.compileSCSS = compileSCSS;
+exports.compileJS = compileJS;
+exports.optimizeImages = optimizeImages;
+exports.liveReload = liveReload;
+
+exports.compileWatch = exports.devNoReload = compileWatch;
+exports.compileWatchReload = exports.dev = compileWatchReload;
+exports.build = build;

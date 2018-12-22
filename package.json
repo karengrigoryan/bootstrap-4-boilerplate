@@ -1,29 +1,34 @@
 {
   "name": "bootstrap-4-boilerplate",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Bootstrap 4 Boilerplate with SCSS and JS compiling",
   "main": "gulpfile.js",
   "repository": "https://github.com/karengrigoryan/bootstrap-4-boilerplate.git",
   "author": "Karen Grigoryan <karen.grigoryan9@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "gulp dev",
+    "start-no-reload": "gulp devNoReload",
+    "build": "gulp build"
+  },
   "devDependencies": {
-    "@babel/cli": "^7.1.2",
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
     "babelify": "^10.0.0",
-    "bootstrap": "^4.1.3",
-    "browser-sync": "^2.26.0",
+    "bootstrap": "^4.2.1",
+    "browser-sync": "^2.26.3",
     "browserify": "^16.2.3",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.0",
     "gulp-autoprefixer": "^5.0.0",
+    "gulp-buffer": "0.0.2",
     "gulp-clean-css": "^3.9.4",
-    "gulp-image": "^4.3.0",
-    "gulp-notify": "^3.2.0",
-    "gulp-plumber": "^1.2.0",
+    "gulp-image": "^4.4.1",
     "gulp-rename": "^1.4.0",
-    "gulp-sass": "^4.0.1",
+    "gulp-sass": "^4.0.2",
+    "gulp-tap": "^1.0.1",
     "gulp-uglify": "^3.0.1",
-    "vinyl-buffer": "^1.0.1",
-    "vinyl-source-stream": "^2.0.0"
+    "prettier": "^1.15.3",
+    "node-notifier": "^5.3.0"
   }
 }
