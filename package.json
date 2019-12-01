@@ -1,6 +1,6 @@
 {
   "name": "bootstrap-4-boilerplate",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Bootstrap 4 Boilerplate with SCSS and JS compiling",
   "main": "gulpfile.js",
   "repository": "https://github.com/karengrigoryan/bootstrap-4-boilerplate.git",
