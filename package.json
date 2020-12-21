@@ -28,7 +28,7 @@
     "gulp-sass": "^4.0.2",
     "gulp-tap": "^1.0.1",
     "gulp-uglify": "^3.0.2",
-    "node-notifier": "^5.4.3",
+    "node-notifier": "^8.0.1",
     "prettier": "^1.19.1"
   }
 }
